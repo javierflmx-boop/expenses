@@ -1,4 +1,4 @@
-\<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -580,17 +580,18 @@ function confirmDelEntry(){
 }
 
 // INVOICE
+function getBillable(name){
+  // single pass - no duplicates
+  return ST.entries.filter(e => e.person === name && (e.owedType === 'theyowe' || !e.owedType || e.owedType === 'none'));
+}
 function openInvoiceModal(){
   if(!ST.activePerson) return;
   const name = ST.activePerson;
-  const pe = ST.entries.filter(e => e.person === name && (!e.owedType || e.owedType === 'none'));
-  const owedEntries = ST.entries.filter(e => e.person === name && e.owedType === 'theyowe');
-  const allBillable = [...pe, ...owedEntries];
+  const allBillable = getBillable(name);
   const total = allBillable.reduce((s,e) => s + e.amount, 0);
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 
-  // build preview
   const itemsHTML = allBillable.slice(-8).map(e =>
     `<div class="inv-item">
       <div class="inv-item-note">${e.note || '—'}</div>
@@ -606,7 +607,7 @@ function openInvoiceModal(){
       </div>
       <div class="inv-date">${dateStr}</div>
     </div>
-    <div class="inv-items">${itemsHTML.length ? itemsHTML : '<div style="color:var(--muted);font-size:13px">No entries yet</div>'}</div>
+    <div class="inv-items">${itemsHTML || '<div style="color:var(--muted);font-size:13px">No entries yet</div>'}</div>
     <div class="inv-total-row">
       <div class="inv-total-lbl">Total Due</div>
       <div class="inv-total-val">$${total.toFixed(2)}</div>
@@ -620,14 +621,11 @@ function sendSMS(){
   const name = ST.activePerson;
   if(!name) return;
   const phone = document.getElementById('phoneInput').value.trim();
-  const pe = ST.entries.filter(e => e.person === name && (!e.owedType || e.owedType === 'none'));
-  const owedEntries = ST.entries.filter(e => e.person === name && e.owedType === 'theyowe');
-  const allBillable = [...pe, ...owedEntries];
+  const allBillable = getBillable(name);
   const total = allBillable.reduce((s,e) => s + e.amount, 0);
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 
-  // build SMS text
   let msg = `Hi ${name}! Here's your invoice (${dateStr}):\n\n`;
   allBillable.slice(-10).forEach(e => {
     msg += `• ${e.note||'—'} — $${e.amount.toFixed(2)}\n`;
@@ -647,9 +645,7 @@ function sendEmail(){
   const name = ST.activePerson;
   if(!name) return;
   const email = document.getElementById('emailInput').value.trim();
-  const pe = ST.entries.filter(e => e.person === name && (!e.owedType || e.owedType === 'none'));
-  const owedEntries = ST.entries.filter(e => e.person === name && e.owedType === 'theyowe');
-  const allBillable = [...pe, ...owedEntries];
+  const allBillable = getBillable(name);
   const total = allBillable.reduce((s,e) => s + e.amount, 0);
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
