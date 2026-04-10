@@ -132,9 +132,12 @@
   /* ENTRIES LIST */
   .section-title{padding:0 28px 10px;font-size:10px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:2.5px;}
   .entries-list{padding:0 16px 90px;display:flex;flex-direction:column;gap:8px;}
-  .entry-card{background:var(--card);border-radius:14px;padding:13px 16px;display:flex;align-items:center;gap:12px;border:1px solid var(--line);transition:border-color 0.2s;}
+  .entry-card{background:var(--card);border-radius:14px;padding:13px 16px;display:flex;align-items:center;gap:12px;border:1px solid var(--line);transition:border-color 0.2s;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+  .entry-card:active{opacity:0.75;}
   .entry-card.theyowe{border-color:rgba(80,220,120,0.3);}
   .entry-card.iowe{border-color:rgba(255,80,80,0.3);}
+  /* edit hint */
+  .ec-edit-hint{font-size:9px;color:var(--muted);text-align:right;margin-top:2px;letter-spacing:0.5px;}
   .ec-avatar{width:36px;height:36px;border-radius:11px;background:rgba(245,162,0,0.12);border:1px solid rgba(245,162,0,0.25);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:var(--orange);flex-shrink:0;text-transform:uppercase;}
   .ec-info{flex:1;min-width:0;}
   .ec-top{display:flex;align-items:center;gap:6px;margin-bottom:3px;}
@@ -270,6 +273,20 @@
     <input type="text" id="editNameInput" placeholder="New name…" maxlength="24" />
     <button class="modal-confirm" onclick="confirmEdit()">Save Name</button>
     <button class="modal-delete" onclick="confirmDelete()">🗑 Remove Person & All Their Entries</button>
+  </div>
+</div>
+
+<!-- EDIT ENTRY MODAL -->
+<div class="modal-overlay" id="editEntryModal" onclick="closeOut(event,'editEntryModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Edit Entry</div>
+    <input type="number" class="modal" id="editAmountInput" placeholder="Amount" inputmode="decimal"
+      style="width:100%;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;color:var(--text);font-family:'Barlow',sans-serif;font-size:22px;font-weight:200;outline:none;margin-bottom:10px;" />
+    <input type="text" id="editNoteInput" placeholder="Note"
+      style="width:100%;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;color:var(--text);font-family:'Barlow',sans-serif;font-size:16px;font-weight:300;outline:none;margin-bottom:10px;" />
+    <button class="modal-confirm" onclick="confirmEditEntry()">Save Changes</button>
+    <button class="modal-delete" onclick="confirmDelEntry()">🗑 Delete This Entry</button>
   </div>
 </div>
 
@@ -432,7 +449,7 @@ function renderEntries(){
     const symColor=ot==='theyowe'?'#50dc78':ot==='iowe'?'#ff7070':'#F5A200';
     const cardClass=ot==='theyowe'?' theyowe':ot==='iowe'?' iowe':'';
     const owedBadge=ot==='theyowe'?`<span class="ec-owed-badge" style="background:rgba(80,220,120,0.15);color:#50dc78">owes me</span>`:ot==='iowe'?`<span class="ec-owed-badge" style="background:rgba(255,80,80,0.15);color:#ff7070">I owe</span>`:'';
-    return `<div class="entry-card${cardClass}">
+    return `<div class="entry-card${cardClass}" onclick="openEditEntry('${e.id}')">
       <div class="ec-avatar">${e.person.charAt(0)}</div>
       <div class="ec-info">
         <div class="ec-top"><span class="ec-name">${e.person}</span>${owedBadge}</div>
@@ -441,6 +458,7 @@ function renderEntries(){
       <div class="ec-right">
         <div class="ec-amount" style="color:${amtColor}"><span style="color:${symColor};font-size:13px">$</span>${e.amount.toFixed(2)}</div>
         <div class="ec-time">${e.time}</div>
+        <div class="ec-edit-hint">tap to edit</div>
       </div>
     </div>`;
   }).join('');
@@ -522,6 +540,35 @@ function confirmDelete(){
   document.getElementById('detailPanel').classList.remove('open');
   save();render();
   showToast(`${name} removed`);
+}
+
+// EDIT ENTRY
+let editingEntryId = null;
+function openEditEntry(id){
+  const e = ST.entries.find(x=>x.id===id);
+  if(!e) return;
+  editingEntryId = id;
+  document.getElementById('editAmountInput').value = e.amount;
+  document.getElementById('editNoteInput').value = e.note || '';
+  document.getElementById('editEntryModal').classList.add('open');
+  setTimeout(()=>document.getElementById('editAmountInput').focus(), 300);
+}
+function confirmEditEntry(){
+  const a = parseFloat(document.getElementById('editAmountInput').value);
+  const note = document.getElementById('editNoteInput').value.trim();
+  if(!a||a<=0){showToast('Enter a valid amount!');return;}
+  ST.entries = ST.entries.map(e => e.id===editingEntryId ? {...e, amount:a, note} : e);
+  document.getElementById('editEntryModal').classList.remove('open');
+  editingEntryId = null;
+  save(); render();
+  showToast('Entry updated!');
+}
+function confirmDelEntry(){
+  ST.entries = ST.entries.filter(e => e.id !== editingEntryId);
+  document.getElementById('editEntryModal').classList.remove('open');
+  editingEntryId = null;
+  save(); render();
+  showToast('Entry deleted!');
 }
 
 // INVOICE
