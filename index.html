@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+\<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -296,11 +296,18 @@
     <div class="modal-handle"></div>
     <div class="modal-title">Send Invoice 📨</div>
     <div class="inv-preview" id="invPreview"></div>
+    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:7px">💬 Text Message</div>
     <div class="phone-row">
       <input type="tel" class="phone-input" id="phoneInput" placeholder="Phone number…" inputmode="tel" />
       <button class="send-sms-btn" onclick="sendSMS()">Send 💬</button>
     </div>
-    <div style="font-size:11px;color:var(--muted);text-align:center;padding-top:4px">Opens your Messages app ready to send</div>
+    <div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:14px">Opens your Messages app ready to send</div>
+    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:7px">✉️ Email</div>
+    <div class="phone-row">
+      <input type="email" class="phone-input" id="emailInput" placeholder="Email address…" inputmode="email" />
+      <button class="send-sms-btn" style="background:#4A9EFF" onclick="sendEmail()">Send ✉️</button>
+    </div>
+    <div style="font-size:11px;color:var(--muted);text-align:center">Opens your Mail app ready to send</div>
   </div>
 </div>
 
@@ -633,6 +640,32 @@ function sendSMS(){
     : `sms:?body=${encoded}`;
 
   window.open(smsUrl, '_blank');
+  document.getElementById('invoiceModal').classList.remove('open');
+}
+
+function sendEmail(){
+  const name = ST.activePerson;
+  if(!name) return;
+  const email = document.getElementById('emailInput').value.trim();
+  const pe = ST.entries.filter(e => e.person === name && (!e.owedType || e.owedType === 'none'));
+  const owedEntries = ST.entries.filter(e => e.person === name && e.owedType === 'theyowe');
+  const allBillable = [...pe, ...owedEntries];
+  const total = allBillable.reduce((s,e) => s + e.amount, 0);
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+
+  const subject = encodeURIComponent(`Invoice for ${name} — ${dateStr}`);
+  let body = `Hi ${name},\n\nHere is your invoice dated ${dateStr}:\n\n`;
+  allBillable.slice(-20).forEach(e => {
+    body += `• ${e.note||'—'} — $${e.amount.toFixed(2)}\n`;
+  });
+  body += `\n----------------------------\nTOTAL DUE: $${total.toFixed(2)}\n----------------------------\n\nPlease send payment at your earliest convenience.\n\nThank you! 🙏`;
+
+  const mailUrl = email
+    ? `mailto:${email}?subject=${subject}&body=${encodeURIComponent(body)}`
+    : `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
+
+  window.open(mailUrl, '_blank');
   document.getElementById('invoiceModal').classList.remove('open');
 }
 
