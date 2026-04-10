@@ -22,9 +22,7 @@
   .date-day{font-size:11px;font-weight:300;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:2px;}
   .date-num{font-family:'Barlow Condensed',sans-serif;font-weight:200;font-size:36px;color:#ffffff;line-height:1;}
   .date-month{font-size:11px;font-weight:300;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:1.5px;}
-  .pendulum-wrap{position:absolute;top:0;right:50px;width:2px;height:210px;pointer-events:none;}
-  .pendulum-line{width:1.5px;height:100%;background:linear-gradient(to bottom,transparent,var(--orange) 40%,var(--orange));margin:0 auto;}
-  .pendulum-ball{width:13px;height:13px;border:2px solid var(--orange);border-radius:50%;position:absolute;bottom:0;left:50%;transform:translateX(-50%);background:var(--dark);}
+  .pendulum-wrap{display:none;}
 
   /* VIEW TABS */
   .view-tabs{display:flex;margin:0 16px;gap:6px;}
@@ -93,6 +91,28 @@
   .bal-val{font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:200;}
   .bal-card.they .bal-label,.bal-card.they .bal-val,.bal-card.net-pos .bal-label,.bal-card.net-pos .bal-val{color:var(--green);}
   .bal-card.iowe .bal-label,.bal-card.iowe .bal-val,.bal-card.net-neg .bal-label,.bal-card.net-neg .bal-val{color:var(--red);}
+
+  /* INVOICE */
+  .invoice-btn{display:flex;align-items:center;justify-content:center;gap:7px;margin:0 20px 12px;padding:11px;border-radius:12px;background:rgba(80,220,120,0.1);border:1px solid rgba(80,220,120,0.3);color:#50dc78;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:0.3px;transition:all 0.15s;}
+  .invoice-btn:active{opacity:0.75;}
+  .inv-preview{background:#0a0f18;border-radius:14px;padding:18px;margin-bottom:12px;border:1px solid rgba(245,162,0,0.15);}
+  .inv-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.06);}
+  .inv-to-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:2px;}
+  .inv-to-name{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:200;color:var(--orange);}
+  .inv-date{font-size:11px;color:var(--muted);text-align:right;margin-top:4px;}
+  .inv-items{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;}
+  .inv-item{display:flex;justify-content:space-between;align-items:center;}
+  .inv-item-note{font-size:13px;font-weight:300;color:rgba(255,255,255,0.8);flex:1;margin-right:12px;}
+  .inv-item-amt{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:200;color:#fff;white-space:nowrap;}
+  .inv-total-row{display:flex;justify-content:space-between;align-items:center;padding-top:11px;border-top:1px solid rgba(245,162,0,0.25);}
+  .inv-total-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;}
+  .inv-total-val{font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:200;color:var(--orange);}
+  .phone-row{display:flex;gap:8px;margin-bottom:10px;}
+  .phone-input{flex:1;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:13px 15px;color:var(--text);font-family:'Barlow',sans-serif;font-size:16px;font-weight:300;outline:none;transition:border-color 0.15s;}
+  .phone-input:focus{border-color:var(--orange);}
+  .phone-input::placeholder{color:var(--muted);}
+  .send-sms-btn{padding:13px 16px;background:#50dc78;border:none;border-radius:13px;color:#000;font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+  .send-sms-btn:active{opacity:0.8;}
 
   .panel-period-tabs{display:flex;gap:5px;padding:10px 18px 5px;}
   .ppt{padding:5px 12px;border-radius:8px;font-size:11px;font-weight:300;color:var(--muted);cursor:pointer;border:1px solid transparent;transition:all 0.15s;}
@@ -216,6 +236,7 @@
     </div>
   </div>
   <div class="balance-row" id="balanceRow"></div>
+  <button class="invoice-btn" onclick="openInvoiceModal()">📨 Send Invoice by Text</button>
   <div class="panel-period-tabs">
     <div class="ppt active" data-pp="all" onclick="setPP('all')">All</div>
     <div class="ppt" data-pp="today" onclick="setPP('today')">Today</div>
@@ -249,6 +270,20 @@
     <input type="text" id="editNameInput" placeholder="New name…" maxlength="24" />
     <button class="modal-confirm" onclick="confirmEdit()">Save Name</button>
     <button class="modal-delete" onclick="confirmDelete()">🗑 Remove Person & All Their Entries</button>
+  </div>
+</div>
+
+<!-- INVOICE MODAL -->
+<div class="modal-overlay" id="invoiceModal" onclick="closeOut(event,'invoiceModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Send Invoice 📨</div>
+    <div class="inv-preview" id="invPreview"></div>
+    <div class="phone-row">
+      <input type="tel" class="phone-input" id="phoneInput" placeholder="Phone number…" inputmode="tel" />
+      <button class="send-sms-btn" onclick="sendSMS()">Send 💬</button>
+    </div>
+    <div style="font-size:11px;color:var(--muted);text-align:center;padding-top:4px">Opens your Messages app ready to send</div>
   </div>
 </div>
 
@@ -487,6 +522,70 @@ function confirmDelete(){
   document.getElementById('detailPanel').classList.remove('open');
   save();render();
   showToast(`${name} removed`);
+}
+
+// INVOICE
+function openInvoiceModal(){
+  if(!ST.activePerson) return;
+  const name = ST.activePerson;
+  const pe = ST.entries.filter(e => e.person === name && (!e.owedType || e.owedType === 'none'));
+  const owedEntries = ST.entries.filter(e => e.person === name && e.owedType === 'theyowe');
+  const allBillable = [...pe, ...owedEntries];
+  const total = allBillable.reduce((s,e) => s + e.amount, 0);
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+
+  // build preview
+  const itemsHTML = allBillable.slice(-8).map(e =>
+    `<div class="inv-item">
+      <div class="inv-item-note">${e.note || '—'}</div>
+      <div class="inv-item-amt">$${e.amount.toFixed(2)}</div>
+    </div>`
+  ).join('');
+
+  document.getElementById('invPreview').innerHTML = `
+    <div class="inv-top">
+      <div>
+        <div class="inv-to-lbl">Invoice for</div>
+        <div class="inv-to-name">${name}</div>
+      </div>
+      <div class="inv-date">${dateStr}</div>
+    </div>
+    <div class="inv-items">${itemsHTML.length ? itemsHTML : '<div style="color:var(--muted);font-size:13px">No entries yet</div>'}</div>
+    <div class="inv-total-row">
+      <div class="inv-total-lbl">Total Due</div>
+      <div class="inv-total-val">$${total.toFixed(2)}</div>
+    </div>
+  `;
+  document.getElementById('invoiceModal').classList.add('open');
+  setTimeout(()=>document.getElementById('phoneInput').focus(), 300);
+}
+
+function sendSMS(){
+  const name = ST.activePerson;
+  if(!name) return;
+  const phone = document.getElementById('phoneInput').value.trim();
+  const pe = ST.entries.filter(e => e.person === name && (!e.owedType || e.owedType === 'none'));
+  const owedEntries = ST.entries.filter(e => e.person === name && e.owedType === 'theyowe');
+  const allBillable = [...pe, ...owedEntries];
+  const total = allBillable.reduce((s,e) => s + e.amount, 0);
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+
+  // build SMS text
+  let msg = `Hi ${name}! Here's your invoice (${dateStr}):\n\n`;
+  allBillable.slice(-10).forEach(e => {
+    msg += `• ${e.note||'—'} — $${e.amount.toFixed(2)}\n`;
+  });
+  msg += `\nTotal due: $${total.toFixed(2)}\n\nPlease send payment. Thank you! 🙏`;
+
+  const encoded = encodeURIComponent(msg);
+  const smsUrl = phone
+    ? `sms:${phone.replace(/\s/g,'')}?body=${encoded}`
+    : `sms:?body=${encoded}`;
+
+  window.open(smsUrl, '_blank');
+  document.getElementById('invoiceModal').classList.remove('open');
 }
 
 function closeOut(e,id){if(e.target===document.getElementById(id))document.getElementById(id).classList.remove('open');}
